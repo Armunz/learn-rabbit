@@ -6,12 +6,13 @@ import (
 	"learn-rabbit/backend-service/internal/repository"
 	"learn-rabbit/backend-service/internal/service"
 	"log"
+	"os"
+	"os/signal"
 
 	"github.com/gofiber/fiber"
 )
 
 func main() {
-
 	log.Println("init config...")
 	cfg := config.InitConfig()
 
@@ -26,5 +27,27 @@ func main() {
 
 	app := fiber.New()
 	c.Route(app)
-	app.Listen("9999")
+
+	// Create a channel to listen for OS signals
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, os.Interrupt)
+
+	// Run Fiber server in a separate goroutine
+	go func() {
+		if err := app.Listen(":8888"); err != nil {
+			log.Fatalf("Error starting server: %s", err)
+		}
+	}()
+
+	// Wait for a termination signal
+	<-stopChan
+	log.Println("Received termination signal. Shutting down server...")
+
+	// Shutdown server
+	if err := app.Shutdown(); err != nil {
+		log.Fatalf("Error shutting down server: %s", err)
+	}
+
+	log.Println("Server gracefully stopped.")
+
 }

@@ -10,7 +10,6 @@ import (
 
 type ProducerConfig struct {
 	BrokerURL     string
-	QueueName     string
 	ExchangeName  string
 	ExchangeType  string
 	APITimeoutMs  int
@@ -24,7 +23,6 @@ func InitConfig() ProducerConfig {
 	}
 
 	brokerURL := os.Getenv("RABBITMQ_BROKER")
-	queueName := os.Getenv("QUEUE_NAME")
 	exchangeName := os.Getenv("EXCHANGE_NAME")
 	exchangeType := os.Getenv("EXCHANGE_TYPE")
 	apiTimeout := os.Getenv("API_TIMEOUT_MS")
@@ -42,7 +40,6 @@ func InitConfig() ProducerConfig {
 
 	return ProducerConfig{
 		BrokerURL:     brokerURL,
-		QueueName:     queueName,
 		ExchangeName:  exchangeName,
 		ExchangeType:  exchangeType,
 		APITimeoutMs:  apiTimeoutNum,

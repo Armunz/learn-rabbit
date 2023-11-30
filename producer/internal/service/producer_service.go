@@ -27,6 +27,7 @@ func (s *ProducerServiceImpl) Publish(ctx context.Context, exchangeName string, 
 	message := amqp.Publishing{
 		DeliveryMode: 0, // transient (which means message is not persistent)
 		Timestamp:    time.Now(),
+		ContentType:  "application/json",
 		Body:         data,
 	}
 

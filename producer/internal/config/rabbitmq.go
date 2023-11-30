@@ -6,7 +6,12 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func InitRabbitMQ(cfg ProducerConfig) *amqp.Channel {
+type ProducerRabbitMQ struct {
+	Connection *amqp.Connection
+	Channel    *amqp.Channel
+}
+
+func InitRabbitMQ(cfg ProducerConfig) ProducerRabbitMQ {
 	// create rabbitmq connection
 	connection, err := amqp.Dial(cfg.BrokerURL)
 	if err != nil {
@@ -26,5 +31,8 @@ func InitRabbitMQ(cfg ProducerConfig) *amqp.Channel {
 		log.Fatalln("failed to declare exchange, ", err)
 	}
 
-	return channel
+	return ProducerRabbitMQ{
+		Connection: connection,
+		Channel:    channel,
+	}
 }
