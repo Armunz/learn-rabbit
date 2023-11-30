@@ -1,0 +1,2 @@
+# learn-rabbit
+Learn RabbitMQ
