@@ -10,16 +10,17 @@ import (
 )
 
 type ConsumerConfig struct {
-	BrokerURL       string
-	DBUserDSN       string
-	QueueName       string
-	DLQName         string
-	QueueRoutingKey string
-	ExchangeName    string
-	ExchangeType    string
-	DLXName         string
-	DLXType         string
-	ConsumerName    string
+	BrokerURL                  string
+	DBUserDSN                  string
+	QueueName                  string
+	DLQName                    string
+	QueueRoutingKey            string
+	ExchangeName               string
+	ExchangeType               string
+	DLXName                    string
+	DLXType                    string
+	ConsumerName               string
+	ConsumerDroppedMessageName string
 
 	MYSQLDSN            string
 	MYSQLMaxConn        int
@@ -31,7 +32,7 @@ type ConsumerConfig struct {
 }
 
 func InitConfig() ConsumerConfig {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("failed to load config file, ", err)
 	}
@@ -46,6 +47,7 @@ func InitConfig() ConsumerConfig {
 	dlxName := os.Getenv("DLX_NAME")
 	dlxType := os.Getenv("DLX_TYPE")
 	consumerName := os.Getenv("CONSUMER_NAME")
+	consumerDroppedMessageName := os.Getenv("CONSUMER_DROPPED_MESSAGE")
 
 	// mysql
 	mysqlDSN := fmt.Sprintf("%s:%s@%s?%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"),
@@ -89,22 +91,23 @@ func InitConfig() ConsumerConfig {
 	}
 
 	return ConsumerConfig{
-		BrokerURL:           brokerURL,
-		DBUserDSN:           mysqlDSN,
-		QueueName:           queueName,
-		DLQName:             dlqName,
-		QueueRoutingKey:     queueRoutingKey,
-		ExchangeName:        exchangeName,
-		ExchangeType:        exchangeType,
-		DLXName:             dlxName,
-		DLXType:             dlxType,
-		ConsumerName:        consumerName,
-		MYSQLDSN:            mysqlDSN,
-		MYSQLMaxConn:        maxConnNum,
-		MYSQLIdleConn:       idleConnNum,
-		MYSQLQueryTimeoutMs: queryTimeoutNum,
-		ConnLifeTimeSecond:  connLifeTimeSecondNum,
-		APITimeoutMs:        apiTimeoutNum,
-		RepoTimeoutMs:       repoTimeoutNum,
+		BrokerURL:                  brokerURL,
+		DBUserDSN:                  mysqlDSN,
+		QueueName:                  queueName,
+		DLQName:                    dlqName,
+		QueueRoutingKey:            queueRoutingKey,
+		ExchangeName:               exchangeName,
+		ExchangeType:               exchangeType,
+		DLXName:                    dlxName,
+		DLXType:                    dlxType,
+		ConsumerName:               consumerName,
+		ConsumerDroppedMessageName: consumerDroppedMessageName,
+		MYSQLDSN:                   mysqlDSN,
+		MYSQLMaxConn:               maxConnNum,
+		MYSQLIdleConn:              idleConnNum,
+		MYSQLQueryTimeoutMs:        queryTimeoutNum,
+		ConnLifeTimeSecond:         connLifeTimeSecondNum,
+		APITimeoutMs:               apiTimeoutNum,
+		RepoTimeoutMs:              repoTimeoutNum,
 	}
 }

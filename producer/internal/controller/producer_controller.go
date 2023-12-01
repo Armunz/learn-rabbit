@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"learn-rabbit/producer/internal/service"
+	"log"
 	"time"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 type ProducerControllerImpl struct {
@@ -25,25 +26,28 @@ func (controller *ProducerControllerImpl) Route(app *fiber.App) {
 	app.Post("/user", controller.Handler)
 }
 
-func (controller *ProducerControllerImpl) Handler(c *fiber.Ctx) {
+func (controller *ProducerControllerImpl) Handler(c *fiber.Ctx) error {
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Duration(controller.timeoutMs)*time.Millisecond)
 	defer cancel()
 
-	request := new(Request)
-	err := c.BodyParser(request)
+	var request Request
+	err := c.BodyParser(&request)
 	if err != nil {
-		c.Status(fiber.StatusInternalServerError).Send(err)
+		log.Println("failed to parse request body, ", err)
+		return err
 	}
 
 	data, err := json.Marshal(request.Data)
 	if err != nil {
-		c.Status(fiber.StatusInternalServerError).Send(err)
+		log.Println("failed to marshal request data, ", err)
+		return err
 	}
 
 	err = controller.producerService.Publish(ctxTimeout, request.ExchangeName, request.RoutingKey, data)
 	if err != nil {
-		c.Status(fiber.StatusInternalServerError).Send(err)
+		return err
 	}
 
-	c.Status(fiber.StatusOK)
+	c.Status(fiber.StatusCreated)
+	return nil
 }

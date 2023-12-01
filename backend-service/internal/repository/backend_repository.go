@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"learn-rabbit/backend-service/internal/model"
+	"log"
 	"net/http"
 	"time"
 )
@@ -46,14 +47,17 @@ func (r *BackendRepositoryImpl) SaveUser(ctx context.Context, request model.User
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctxTimeout, "POST", r.producerURL, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctxTimeout, "POST", r.producerURL+"/user", bytes.NewBuffer(requestBody))
 	if err != nil {
+		log.Println("failed to create request, ", err)
 		return err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
+		log.Println("failed to do request, ", err)
 		return err
 	}
 	defer res.Body.Close()

@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {

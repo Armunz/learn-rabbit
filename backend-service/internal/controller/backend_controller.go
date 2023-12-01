@@ -6,7 +6,7 @@ import (
 	"learn-rabbit/backend-service/internal/service"
 	"time"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 type BackendController struct {
@@ -21,23 +21,21 @@ func NewBackendController(backendService service.BackendService, timeoutMs int) 
 	}
 }
 
-func (b *BackendController) SaveUser(c *fiber.Ctx) {
+func (b *BackendController) SaveUser(c *fiber.Ctx) error {
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Duration(b.timeoutMs)*time.Millisecond)
 	defer cancel()
 
 	userRequest := new(model.UserRequest)
 	if err := c.BodyParser(userRequest); err != nil {
-		c.Status(fiber.StatusInternalServerError).Send(err)
-		return
+		return err
 	}
 
 	if err := b.backendService.SaveUser(ctxTimeout, *userRequest); err != nil {
-		c.Status(fiber.StatusInternalServerError).Send(err)
-		return
+		return err
 	}
 
-	c.Status(fiber.StatusCreated).JSON(model.GeneralResponse{
-		Code:    200,
+	return c.Status(fiber.StatusCreated).JSON(model.GeneralResponse{
+		Code:    201,
 		Message: "User Created",
 	})
 }

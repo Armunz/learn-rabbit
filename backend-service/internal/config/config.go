@@ -17,7 +17,7 @@ type Config struct {
 }
 
 func InitConfig() Config {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("failed to load config file, ", err)
 	}

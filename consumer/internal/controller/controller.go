@@ -40,6 +40,8 @@ func (c *ConsumerControllerImpl) Handle(ctx context.Context, delivery amqp.Deliv
 		log.Println("failed to acknowledge the message, ", err)
 	}
 
+	log.Println("message acknowledged")
+
 	return
 }
 
@@ -52,4 +54,6 @@ func (c *ConsumerControllerImpl) HandleDroppedMessage(ctx context.Context, deliv
 	if err := delivery.Ack(false); err != nil {
 		log.Println("failed to acknowledge the dropped message, ", err)
 	}
+
+	log.Println("dropped message acknowledged")
 }

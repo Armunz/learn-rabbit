@@ -33,14 +33,16 @@ func main() {
 	consumerService := service.NewConsumerService(repo)
 
 	// init controller
+	log.Println("Init controller...")
 	consumerController := controller.NewConsumerController(consumerService)
 
+	log.Println("Start consuming message...")
 	messages, err := consumerRabbitMQ.Channel.Consume(cfg.QueueName, cfg.ConsumerName, false, false, false, false, nil)
 	if err != nil {
 		log.Fatalln("failed to consume message from producer, ", err)
 	}
 
-	droppedMessages, err := consumerRabbitMQ.Channel.Consume(cfg.DLQName, cfg.ConsumerName, false, false, false, false, nil)
+	droppedMessages, err := consumerRabbitMQ.Channel.Consume(cfg.DLQName, cfg.ConsumerDroppedMessageName, false, false, false, false, nil)
 	if err != nil {
 		log.Fatalln("failed to consume dropped message, ", err)
 	}
@@ -56,8 +58,23 @@ func main() {
 
 		// Stop consuming messages
 		if err := consumerRabbitMQ.Channel.Cancel(cfg.ConsumerName, false); err != nil {
-			log.Printf("Error cancelling consumer: %s", err)
+			log.Fatalf("Error cancelling consumer: %s", err)
 		}
+
+		if err := consumerRabbitMQ.Channel.Cancel(cfg.ConsumerDroppedMessageName, false); err != nil {
+			log.Fatalf("Error cancelling dropped message consumer: %s", err)
+		}
+
+		if err := consumerRabbitMQ.Channel.Close(); err != nil {
+			log.Fatalln("Failed to close consumer rabbitMQ channel ,", err)
+		}
+
+		if err := consumerRabbitMQ.Connection.Close(); err != nil {
+			log.Fatalln("Failed to close consumer rabbitMQ connection ,", err)
+		}
+
+		// Exit the program
+		os.Exit(0)
 	}()
 
 	// start consume message

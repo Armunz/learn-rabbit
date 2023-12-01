@@ -17,7 +17,6 @@ func InitRabbitMQ(cfg ProducerConfig) ProducerRabbitMQ {
 	if err != nil {
 		log.Fatalln("failed to connect to rabbitMQ broker, ", err)
 	}
-	defer connection.Close()
 
 	// open rabbitMQ channel
 	channel, err := connection.Channel()
