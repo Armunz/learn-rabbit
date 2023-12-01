@@ -33,6 +33,7 @@ func (c *ConsumerControllerImpl) Handle(ctx context.Context, delivery amqp.Deliv
 		if err := delivery.Nack(false, false); err != nil {
 			log.Println("failed to neglect the message, ", err)
 		}
+		return
 	}
 
 	// when there is no error, then acknowledge the message

@@ -19,6 +19,7 @@ type ConsumerConfig struct {
 	ExchangeType               string
 	DLXName                    string
 	DLXType                    string
+	DLXRoutingKey              string
 	ConsumerName               string
 	ConsumerDroppedMessageName string
 
@@ -46,6 +47,7 @@ func InitConfig() ConsumerConfig {
 	exchangeType := os.Getenv("EXCHANGE_TYPE")
 	dlxName := os.Getenv("DLX_NAME")
 	dlxType := os.Getenv("DLX_TYPE")
+	dlxRoutingKey := os.Getenv("DLX_ROUTING_KEY")
 	consumerName := os.Getenv("CONSUMER_NAME")
 	consumerDroppedMessageName := os.Getenv("CONSUMER_DROPPED_MESSAGE")
 
@@ -100,6 +102,7 @@ func InitConfig() ConsumerConfig {
 		ExchangeType:               exchangeType,
 		DLXName:                    dlxName,
 		DLXType:                    dlxType,
+		DLXRoutingKey:              dlxRoutingKey,
 		ConsumerName:               consumerName,
 		ConsumerDroppedMessageName: consumerDroppedMessageName,
 		MYSQLDSN:                   mysqlDSN,

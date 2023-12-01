@@ -30,8 +30,13 @@ func InitRabbitMQ(cfg ConsumerConfig) ConsumerRabbitMQ {
 		log.Fatalln("failed to declare exchange, ", err)
 	}
 
+	//
+	args := amqp.Table{
+		"x-dead-letter-exchange":    cfg.DLXName,
+		"x-dead-letter-routing-key": cfg.DLXRoutingKey,
+	}
 	// declare queue
-	_, err = channel.QueueDeclare(cfg.QueueName, true, false, false, false, amqp.Table{"x-dead-letter-exchange": cfg.DLXName})
+	_, err = channel.QueueDeclare(cfg.QueueName, true, false, false, false, args)
 	if err != nil {
 		log.Fatalln("failed to declare queue, ", err)
 	}
@@ -49,7 +54,7 @@ func InitRabbitMQ(cfg ConsumerConfig) ConsumerRabbitMQ {
 	}
 
 	// configure dead letter exchange and queue for dropped message to be retried
-	err = channel.ExchangeDeclare(cfg.DLXName, cfg.DLXType, true, false, false, false, nil)
+	err = channel.ExchangeDeclare(cfg.DLXName, "direct", true, false, false, false, nil)
 	if err != nil {
 		log.Fatalln("failed to declare dead letter exchange, ", err)
 	}
@@ -59,10 +64,29 @@ func InitRabbitMQ(cfg ConsumerConfig) ConsumerRabbitMQ {
 		log.Fatalln("failed to declare dead letter queue, ", err)
 	}
 
-	err = channel.QueueBind(cfg.DLQName, "", cfg.DLXName, false, nil)
+	// bind dlx to dlq
+	err = channel.QueueBind(cfg.DLQName, cfg.DLXRoutingKey, cfg.DLXName, false, nil)
 	if err != nil {
 		log.Fatalln("failed to bind dead letter queue to dead letter exchange, ", err)
 	}
+
+	// // Set the main queue to use the dead letter exchange
+	// args := amqp.Table{
+	// 	"x-dead-letter-exchange":    cfg.DLXName,       // Dead letter exchange name
+	// 	"x-dead-letter-routing-key": cfg.DLXRoutingKey, // Dead letter routing key
+	// }
+
+	// // Bind the dead lettering arguments to the main queue
+	// err = channel.QueueBind(
+	// 	cfg.QueueName,       // Queue name
+	// 	cfg.QueueRoutingKey, // Routing key
+	// 	cfg.ExchangeName,    // Exchange name
+	// 	false,               // No-wait
+	// 	args,                // Arguments with dead lettering configuration
+	// )
+	// if err != nil {
+	// 	log.Fatalf("Failed to bind the dead lettering arguments to the main queue: %s", err)
+	// }
 
 	return ConsumerRabbitMQ{
 		Connection: connection,

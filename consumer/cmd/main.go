@@ -37,15 +37,6 @@ func main() {
 	consumerController := controller.NewConsumerController(consumerService)
 
 	log.Println("Start consuming message...")
-	messages, err := consumerRabbitMQ.Channel.Consume(cfg.QueueName, cfg.ConsumerName, false, false, false, false, nil)
-	if err != nil {
-		log.Fatalln("failed to consume message from producer, ", err)
-	}
-
-	droppedMessages, err := consumerRabbitMQ.Channel.Consume(cfg.DLQName, cfg.ConsumerDroppedMessageName, false, false, false, false, nil)
-	if err != nil {
-		log.Fatalln("failed to consume dropped message, ", err)
-	}
 
 	// Create a channel to communicate termination signal
 	stopChan := make(chan os.Signal, 1)
@@ -56,19 +47,23 @@ func main() {
 		<-stopChan
 		log.Println("Received termination signal. Gracefully stopping consumer...")
 
+		log.Printf("Stop %s...\n", cfg.ConsumerName)
 		// Stop consuming messages
 		if err := consumerRabbitMQ.Channel.Cancel(cfg.ConsumerName, false); err != nil {
 			log.Fatalf("Error cancelling consumer: %s", err)
 		}
 
+		log.Printf("Stop %s...\n", cfg.ConsumerDroppedMessageName)
 		if err := consumerRabbitMQ.Channel.Cancel(cfg.ConsumerDroppedMessageName, false); err != nil {
 			log.Fatalf("Error cancelling dropped message consumer: %s", err)
 		}
 
+		log.Println("Close consumer channel...")
 		if err := consumerRabbitMQ.Channel.Close(); err != nil {
 			log.Fatalln("Failed to close consumer rabbitMQ channel ,", err)
 		}
 
+		log.Println("Close consumer connection...")
 		if err := consumerRabbitMQ.Connection.Close(); err != nil {
 			log.Fatalln("Failed to close consumer rabbitMQ connection ,", err)
 		}
@@ -79,6 +74,11 @@ func main() {
 
 	// start consume message
 	go func() {
+		messages, err := consumerRabbitMQ.Channel.Consume(cfg.QueueName, cfg.ConsumerName, false, false, false, false, nil)
+		if err != nil {
+			log.Fatalln("failed to consume message from producer, ", err)
+		}
+
 		for delivery := range messages {
 			consumerController.Handle(context.Background(), delivery)
 		}
@@ -86,8 +86,13 @@ func main() {
 
 	// start consume dropped message
 	go func() {
-		for delivery := range droppedMessages {
-			consumerController.HandleDroppedMessage(context.Background(), delivery)
+		droppedMessages, err := consumerRabbitMQ.Channel.Consume(cfg.DLQName, cfg.ConsumerDroppedMessageName, false, false, false, false, nil)
+		if err != nil {
+			log.Fatalln("failed to consume dropped message, ", err)
+		}
+
+		for droppedDelivery := range droppedMessages {
+			consumerController.HandleDroppedMessage(context.Background(), droppedDelivery)
 		}
 	}()
 
