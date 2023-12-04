@@ -68,6 +68,9 @@ func main() {
 			log.Fatalln("Failed to close consumer rabbitMQ connection ,", err)
 		}
 
+		log.Println("Close MYSQL database connection...")
+		config.CleanUp(dbUser)
+
 		// Exit the program
 		os.Exit(0)
 	}()

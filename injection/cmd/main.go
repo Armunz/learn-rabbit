@@ -36,6 +36,8 @@ func main() {
 			log.Println("failed to inject request to backend, ", err)
 			break
 		}
+		log.Println("===request send===")
+		time.Sleep(5 * time.Second)
 	}
 
 	log.Println("===Finish===")

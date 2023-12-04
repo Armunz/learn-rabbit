@@ -4,6 +4,9 @@ import (
 	"context"
 	"learn-rabbit/consumer/internal/service"
 	"log"
+	"time"
+
+	"github.com/avast/retry-go"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -51,6 +54,25 @@ func (c *ConsumerControllerImpl) HandleDroppedMessage(ctx context.Context, deliv
 
 	body := delivery.Body
 	log.Println("Dropped Message: ", string(body))
+
+	// we can implement retry mechanism when dead message failed to handle
+	err := retry.Do(
+		func() error {
+			return c.consumerService.Handle(ctx, body)
+		},
+		retry.Attempts(3),
+		retry.OnRetry(func(n uint, err error) {
+			log.Printf("Retrying request after error: %v", err)
+		}),
+		retry.Delay(time.Duration(1000)*time.Millisecond), // set default delay
+		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+			return retry.BackOffDelay(n, err, config) // increase the delay time between consecutive retries
+		}),
+	)
+	if err != nil {
+		// if max attempt still fails, then we can log the failed message to db
+		log.Println("Failed message: ", string(body))
+	}
 
 	if err := delivery.Ack(false); err != nil {
 		log.Println("failed to acknowledge the dropped message, ", err)
