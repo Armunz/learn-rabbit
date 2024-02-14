@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"learn-rabbit/backend-service/internal/model"
 	"log"
 	"net/http"
@@ -15,7 +16,7 @@ type BackendRepository interface {
 	SaveUser(ctx context.Context, request model.UserRequest) error
 }
 
-type BackendRepositoryImpl struct {
+type backendRepositoryImpl struct {
 	producerURL  string
 	exchangeName string
 	routingKey   string
@@ -23,7 +24,7 @@ type BackendRepositoryImpl struct {
 }
 
 func NewBackendRepository(producerURL string, exchangeName string, routingKey string, timeoutMs int) BackendRepository {
-	return &BackendRepositoryImpl{
+	return &backendRepositoryImpl{
 		producerURL:  producerURL,
 		exchangeName: exchangeName,
 		routingKey:   routingKey,
@@ -32,7 +33,7 @@ func NewBackendRepository(producerURL string, exchangeName string, routingKey st
 }
 
 // SaveUser implements BackendRepository
-func (r *BackendRepositoryImpl) SaveUser(ctx context.Context, request model.UserRequest) error {
+func (r *backendRepositoryImpl) SaveUser(ctx context.Context, request model.UserRequest) error {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(r.timeoutMs)*time.Millisecond)
 	defer cancel()
 
@@ -61,6 +62,13 @@ func (r *BackendRepositoryImpl) SaveUser(ctx context.Context, request model.User
 		return err
 	}
 	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println("failed to read response body, ", err)
+	}
+
+	log.Println("Response Body: ", string(body))
 
 	if res.StatusCode != http.StatusCreated {
 		return fmt.Errorf("expected 201 HTTP Status, but found %d", res.StatusCode)

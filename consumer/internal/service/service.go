@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-type ConsumerServiceImpl struct {
+type consumerServiceImpl struct {
 	userRepo repository.UserRepository
 }
 
@@ -16,13 +16,13 @@ type ConsumerService interface {
 }
 
 func NewConsumerService(userRepo repository.UserRepository) ConsumerService {
-	return &ConsumerServiceImpl{
+	return &consumerServiceImpl{
 		userRepo: userRepo,
 	}
 }
 
 // Handle implements ConsumerService.
-func (s *ConsumerServiceImpl) Handle(ctx context.Context, body []byte) error {
+func (s *consumerServiceImpl) Handle(ctx context.Context, body []byte) error {
 	var user repository.User
 	if err := json.Unmarshal(body, &user); err != nil {
 		log.Println("failed to parse body to user, ", err)

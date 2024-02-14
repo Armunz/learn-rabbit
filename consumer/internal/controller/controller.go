@@ -72,6 +72,11 @@ func (c *ConsumerControllerImpl) HandleDroppedMessage(ctx context.Context, deliv
 	if err != nil {
 		// if max attempt still fails, then we can log the failed message to db
 		log.Println("Failed message: ", string(body))
+		if err := delivery.Nack(false, false); err != nil {
+			log.Println("failed to negative acknowledge message, ", err)
+		}
+		log.Println("dropped message neglected")
+		return
 	}
 
 	if err := delivery.Ack(false); err != nil {

@@ -8,7 +8,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type ProducerServiceImpl struct {
+type producerServiceImpl struct {
 	repo repository.ProducerRepository
 }
 
@@ -17,13 +17,13 @@ type ProducerService interface {
 }
 
 func NewProducerService(repo repository.ProducerRepository) ProducerService {
-	return &ProducerServiceImpl{
+	return &producerServiceImpl{
 		repo: repo,
 	}
 }
 
 // Publish implements ProducerService
-func (s *ProducerServiceImpl) Publish(ctx context.Context, exchangeName string, routingKey string, data []byte) error {
+func (s *producerServiceImpl) Publish(ctx context.Context, exchangeName string, routingKey string, data []byte) error {
 	message := amqp.Publishing{
 		DeliveryMode: 0, // transient (which means message is not persistent)
 		Timestamp:    time.Now(),

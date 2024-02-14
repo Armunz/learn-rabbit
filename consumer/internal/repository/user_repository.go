@@ -11,7 +11,7 @@ type User struct {
 	Age  int    `json:"age"`
 }
 
-type UserRepositoryImpl struct {
+type userRepositoryImpl struct {
 	db        *sql.DB
 	timeoutMs int
 }
@@ -21,14 +21,14 @@ type UserRepository interface {
 }
 
 func NewUserRepository(db *sql.DB, timeoutMs int) UserRepository {
-	return &UserRepositoryImpl{
+	return &userRepositoryImpl{
 		db:        db,
 		timeoutMs: timeoutMs,
 	}
 }
 
 // SaveUser implements UserRepository.
-func (r *UserRepositoryImpl) SaveUser(ctx context.Context, user User) error {
+func (r *userRepositoryImpl) SaveUser(ctx context.Context, user User) error {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(r.timeoutMs)*time.Millisecond)
 	defer cancel()
 

@@ -10,17 +10,17 @@ type BackendService interface {
 	SaveUser(ctx context.Context, request model.UserRequest) error
 }
 
-type BackendServiceImpl struct {
+type backendServiceImpl struct {
 	repo repository.BackendRepository
 }
 
 func NewBackendService(repo repository.BackendRepository) BackendService {
-	return &BackendServiceImpl{
+	return &backendServiceImpl{
 		repo: repo,
 	}
 }
 
 // SaveUser implements BackendService
-func (s *BackendServiceImpl) SaveUser(ctx context.Context, request model.UserRequest) error {
+func (s *backendServiceImpl) SaveUser(ctx context.Context, request model.UserRequest) error {
 	return s.repo.SaveUser(ctx, request)
 }

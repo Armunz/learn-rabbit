@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -66,6 +67,13 @@ func injectBackend(ctx context.Context, message Request) error {
 		return err
 	}
 	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println("failed to read response body, ", err)
+	}
+
+	log.Println("Response Body: ", string(body))
 
 	if res.StatusCode != http.StatusCreated {
 		return fmt.Errorf("expected 201 HTTP Status, but found %d", res.StatusCode)

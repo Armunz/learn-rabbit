@@ -19,11 +19,16 @@ func main() {
 
 	// init rabbitMQ
 	log.Println("Init producer rabbitMQ...")
-	producerRabbitMQ := config.InitRabbitMQ(cfg)
+	var producerRabbitMQ *config.ProducerRabbitMQ
+	if cfg.IsUsingCluster {
+		producerRabbitMQ = config.InitRabbitMQCluster(cfg)
+	} else {
+		producerRabbitMQ = config.InitRabbitMQ(cfg)
+	}
 
 	// init repository
 	log.Println("Init repository...")
-	repo := repository.NewProducerRepository(producerRabbitMQ.Channel, cfg.RepoTimeoutMs)
+	repo := repository.NewProducerRepository(producerRabbitMQ, cfg.RepoTimeoutMs)
 
 	// init service
 	log.Println("Init service...")

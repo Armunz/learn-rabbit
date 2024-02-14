@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"learn-rabbit/consumer/internal/config"
 	"learn-rabbit/consumer/internal/controller"
 	"learn-rabbit/consumer/internal/repository"
@@ -20,10 +19,6 @@ func main() {
 	log.Println("Init mysql database...")
 	dbUser := config.NewMySQLDatabase(cfg)
 
-	// init consumer rabbitMQ
-	log.Println("Init consumer rabbitMQ...")
-	consumerRabbitMQ := config.InitRabbitMQ(cfg)
-
 	// init repository
 	log.Println("Init repository...")
 	repo := repository.NewUserRepository(dbUser, cfg.MYSQLQueryTimeoutMs)
@@ -36,6 +31,15 @@ func main() {
 	log.Println("Init controller...")
 	consumerController := controller.NewConsumerController(consumerService)
 
+	// init consumer rabbitMQ
+	log.Println("Init consumer rabbitMQ...")
+	var consumerRabbitMQ *config.ConsumerRabbitMQ
+	if cfg.IsUsingCluster {
+		consumerRabbitMQ = config.InitRabbitMQCluster(cfg, consumerController)
+	} else {
+		consumerRabbitMQ = config.InitRabbitMQ(cfg)
+	}
+
 	log.Println("Start consuming message...")
 
 	// Create a channel to communicate termination signal
@@ -46,6 +50,8 @@ func main() {
 	go func() {
 		<-stopChan
 		log.Println("Received termination signal. Gracefully stopping consumer...")
+
+		consumerRabbitMQ.StopConsuming()
 
 		log.Printf("Stop %s...\n", cfg.ConsumerName)
 		// Stop consuming messages
@@ -76,28 +82,29 @@ func main() {
 	}()
 
 	// start consume message
-	go func() {
-		messages, err := consumerRabbitMQ.Channel.Consume(cfg.QueueName, cfg.ConsumerName, false, false, false, false, nil)
-		if err != nil {
-			log.Fatalln("failed to consume message from producer, ", err)
-		}
+	consumerRabbitMQ.StartConsume(cfg, consumerController)
+	// go func(c *config.ConsumerRabbitMQ) {
+	// 	messages, err := c.Channel.Consume(cfg.QueueName, cfg.ConsumerName, false, false, false, false, nil)
+	// 	if err != nil {
+	// 		log.Fatalln("failed to consume message from producer, ", err)
+	// 	}
 
-		for delivery := range messages {
-			consumerController.Handle(context.Background(), delivery)
-		}
-	}()
+	// 	for delivery := range messages {
+	// 		consumerController.Handle(context.Background(), delivery)
+	// 	}
+	// }(consumerRabbitMQ)
 
-	// start consume dropped message
-	go func() {
-		droppedMessages, err := consumerRabbitMQ.Channel.Consume(cfg.DLQName, cfg.ConsumerDroppedMessageName, false, false, false, false, nil)
-		if err != nil {
-			log.Fatalln("failed to consume dropped message, ", err)
-		}
+	// // start consume dropped message
+	// go func(c *config.ConsumerRabbitMQ) {
+	// 	droppedMessages, err := c.Channel.Consume(cfg.DLQName, cfg.ConsumerDroppedMessageName, false, false, false, false, nil)
+	// 	if err != nil {
+	// 		log.Fatalln("failed to consume dropped message, ", err)
+	// 	}
 
-		for droppedDelivery := range droppedMessages {
-			consumerController.HandleDroppedMessage(context.Background(), droppedDelivery)
-		}
-	}()
+	// 	for droppedDelivery := range droppedMessages {
+	// 		consumerController.HandleDroppedMessage(context.Background(), droppedDelivery)
+	// 	}
+	// }(consumerRabbitMQ)
 
 	// Keep the main goroutine running
 	select {}

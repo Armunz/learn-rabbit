@@ -4,16 +4,19 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type ProducerConfig struct {
-	BrokerURL     string
-	ExchangeName  string
-	ExchangeType  string
-	APITimeoutMs  int
-	RepoTimeoutMs int
+	BrokerURL         string
+	BrokerClusterURLs []string
+	IsUsingCluster    bool
+	ExchangeName      string
+	ExchangeType      string
+	APITimeoutMs      int
+	RepoTimeoutMs     int
 }
 
 func InitConfig() ProducerConfig {
@@ -28,6 +31,16 @@ func InitConfig() ProducerConfig {
 	apiTimeout := os.Getenv("API_TIMEOUT_MS")
 	repoTimeout := os.Getenv("REPO_TIMEOUT_MS")
 
+	isUsingCluster, err := strconv.ParseBool(os.Getenv("IS_USING_CLUSTER"))
+	if err != nil {
+		log.Fatalln("failed to parse is using cluster, ", err)
+	}
+
+	clusterURLs := strings.Split(os.Getenv("RABBITMQ_CLUSTER"), "|")
+	if len(clusterURLs) == 0 {
+		log.Fatalln("cluster url must be specified")
+	}
+
 	apiTimeoutNum, err := strconv.Atoi(apiTimeout)
 	if err != nil {
 		log.Fatal("failed to parse api timeout, ", err)
@@ -39,10 +52,12 @@ func InitConfig() ProducerConfig {
 	}
 
 	return ProducerConfig{
-		BrokerURL:     brokerURL,
-		ExchangeName:  exchangeName,
-		ExchangeType:  exchangeType,
-		APITimeoutMs:  apiTimeoutNum,
-		RepoTimeoutMs: repoTimeoutNum,
+		BrokerURL:         brokerURL,
+		BrokerClusterURLs: clusterURLs,
+		IsUsingCluster:    isUsingCluster,
+		ExchangeName:      exchangeName,
+		ExchangeType:      exchangeType,
+		APITimeoutMs:      apiTimeoutNum,
+		RepoTimeoutMs:     repoTimeoutNum,
 	}
 }

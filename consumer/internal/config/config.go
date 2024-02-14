@@ -5,12 +5,15 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type ConsumerConfig struct {
 	BrokerURL                  string
+	BrokerClusterURLs          []string
+	IsUsingCluster             bool
 	DBUserDSN                  string
 	QueueName                  string
 	DLQName                    string
@@ -50,6 +53,16 @@ func InitConfig() ConsumerConfig {
 	dlxRoutingKey := os.Getenv("DLX_ROUTING_KEY")
 	consumerName := os.Getenv("CONSUMER_NAME")
 	consumerDroppedMessageName := os.Getenv("CONSUMER_DROPPED_MESSAGE")
+
+	isUsingCluster, err := strconv.ParseBool(os.Getenv("IS_USING_CLUSTER"))
+	if err != nil {
+		log.Fatalln("failed to parse is using cluster, ", err)
+	}
+
+	clusterURLs := strings.Split(os.Getenv("RABBITMQ_CLUSTER"), "|")
+	if len(clusterURLs) == 0 {
+		log.Fatalln("cluster url must be specified")
+	}
 
 	// mysql
 	mysqlDSN := fmt.Sprintf("%s:%s@%s?%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"),
@@ -94,6 +107,8 @@ func InitConfig() ConsumerConfig {
 
 	return ConsumerConfig{
 		BrokerURL:                  brokerURL,
+		BrokerClusterURLs:          clusterURLs,
+		IsUsingCluster:             isUsingCluster,
 		DBUserDSN:                  mysqlDSN,
 		QueueName:                  queueName,
 		DLQName:                    dlqName,

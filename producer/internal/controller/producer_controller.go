@@ -10,23 +10,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ProducerControllerImpl struct {
+type producerControllerImpl struct {
 	producerService service.ProducerService
 	timeoutMs       int
 }
 
-func NewProducerController(producerService service.ProducerService, timeoutMs int) *ProducerControllerImpl {
-	return &ProducerControllerImpl{
+func NewProducerController(producerService service.ProducerService, timeoutMs int) *producerControllerImpl {
+	return &producerControllerImpl{
 		producerService: producerService,
 		timeoutMs:       timeoutMs,
 	}
 }
 
-func (controller *ProducerControllerImpl) Route(app *fiber.App) {
+func (controller *producerControllerImpl) Route(app *fiber.App) {
 	app.Post("/user", controller.Handler)
 }
 
-func (controller *ProducerControllerImpl) Handler(c *fiber.Ctx) error {
+func (controller *producerControllerImpl) Handler(c *fiber.Ctx) error {
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Duration(controller.timeoutMs)*time.Millisecond)
 	defer cancel()
 
